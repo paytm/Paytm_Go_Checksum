@@ -25,8 +25,8 @@ func main() {
 	* Generate checksum by parameters we have
 	* Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
 	*/
-	paytmChecksum := PaytmChecksum.GenerateSignature(paytmParams, "YOUR_KEY_HERE")
-	verifyChecksum := PaytmChecksum.VerifySignature(paytmParams, "YOUR_KEY_HERE", paytmChecksum)
+	paytmChecksum := PaytmChecksum.GenerateSignature(paytmParams, "YOUR_MERCHANT_KEY")
+	verifyChecksum := PaytmChecksum.VerifySignature(paytmParams, "YOUR_MERCHANT_KEY", paytmChecksum)
 
 	fmt.Printf("GenerateSignature Returns: %s\n", paytmChecksum)
 	fmt.Printf("VerifySignature Returns: %t\n\n", verifyChecksum)
@@ -39,8 +39,8 @@ func main() {
 	* Generate checksum by parameters we have
 	* Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
 	*/
-	paytmChecksum = PaytmChecksum.GenerateSignatureByString(body, "YOUR_KEY_HERE")
-	verifyChecksum = PaytmChecksum.VerifySignatureByString(body, "YOUR_KEY_HERE", paytmChecksum)
+	paytmChecksum = PaytmChecksum.GenerateSignatureByString(body, "YOUR_MERCHANT_KEY")
+	verifyChecksum = PaytmChecksum.VerifySignatureByString(body, "YOUR_MERCHANT_KEY", paytmChecksum)
 
 	fmt.Printf("GenerateSignatureByString Returns: %s\n", paytmChecksum)
 	fmt.Printf("VerifySignatureByString Returns: %t\n\n", verifyChecksum)

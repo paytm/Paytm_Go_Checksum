@@ -71,6 +71,9 @@ func GenerateSignature(params map[string]string, key string) string {
 	return GenerateSignatureByString(sorted_string, key)
 }
 func VerifySignature(params map[string]string, key string, checksum string) bool {
+	if _, ok := params["CHECKSUMHASH"]; ok {
+		delete(params, "CHECKSUMHASH")
+	}
 	sorted_string := getStringByParams(params)
 	return VerifySignatureByString(sorted_string, key, checksum)
 }
@@ -108,7 +111,11 @@ func getStringByParams(params map[string]string) string{
 
 	sorted_values := make([]string, 0, len(params))
 	for _, element := range sorted_keys {
-		sorted_values = append(sorted_values, params[element])
+		param := params[element]
+		if strings.ToLower(params[element]) == "null" {
+			param = ""
+		}
+		sorted_values = append(sorted_values, param)
 	}
 	return strings.Join(sorted_values,"|")
 }
