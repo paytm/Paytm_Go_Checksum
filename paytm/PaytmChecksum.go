@@ -1,27 +1,27 @@
 /**
- * Paytm uses checksum signature to ensure that API requests and responses shared between your 
- * application and Paytm over network have not been tampered with. We use SHA256 hashing and 
+ * Paytm uses checksum signature to ensure that API requests and responses shared between your
+ * application and Paytm over network have not been tampered with. We use SHA256 hashing and
  * AES128 encryption algorithm to ensure the safety of transaction data.
  *
  * @author     Lalit Kumar
  * @version    2.0
  * @link       https://developer.paytm.com/docs/checksum/#go
  */
- 
+
 package PaytmChecksum
+
 import (
-	"crypto/sha256"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"encoding/hex"
+	"crypto/sha256"
 	"encoding/base64"
-	"math/rand"
-	"time"
+	"encoding/hex"
 	"errors"
-	"log"
+	"math/rand"
 	"sort"
 	"strings"
+	"time"
 )
 
 var IV = "@@@@&&&&####$$$$"
@@ -66,11 +66,11 @@ func Decrypt(encrypted string, key string) (string, error) {
 	return string(pkcs5Unpad(decrypted)), nil
 }
 
-func GenerateSignature(params map[string]string, key string) string {
+func GenerateSignature(params map[string]string, key string) (string, error) {
 	sorted_string := getStringByParams(params)
 	return GenerateSignatureByString(sorted_string, key)
 }
-func VerifySignature(params map[string]string, key string, checksum string) bool {
+func VerifySignature(params map[string]string, key string, checksum string) (bool, error) {
 	if _, ok := params["CHECKSUMHASH"]; ok {
 		delete(params, "CHECKSUMHASH")
 	}
@@ -78,18 +78,27 @@ func VerifySignature(params map[string]string, key string, checksum string) bool
 	return VerifySignatureByString(sorted_string, key, checksum)
 }
 
-func GenerateSignatureByString(params string, key string) string {
+func GenerateSignatureByString(params string, key string) (string, error) {
 	salt := generateRandomString(4)
-	return calculateChecksum(params, key, salt)
+	calChckSum, err := calculateChecksum(params, key, salt)
+	if err != nil {
+		return "", err
+	}
+	return calChckSum, nil
 }
 
-func VerifySignatureByString(params string, key string, checksum string) bool {
+func VerifySignatureByString(params string, key string, checksum string) (bool, error) {
 	paytm_hash, err := Decrypt(checksum, key)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
 	salt := paytm_hash[len(paytm_hash)-4:]
-	return (checksum == calculateChecksum(params, key, salt));
+	calChckSum, err := calculateChecksum(params, key, salt)
+	if err != nil {
+		return false, err
+	}
+
+	return (checksum == calChckSum), nil
 }
 
 func generateRandomString(length int) string {
@@ -102,7 +111,7 @@ func generateRandomString(length int) string {
 	return string(b)
 }
 
-func getStringByParams(params map[string]string) string{
+func getStringByParams(params map[string]string) string {
 	sorted_keys := make([]string, 0, len(params))
 	for k := range params {
 		sorted_keys = append(sorted_keys, k)
@@ -117,24 +126,24 @@ func getStringByParams(params map[string]string) string{
 		}
 		sorted_values = append(sorted_values, param)
 	}
-	return strings.Join(sorted_values,"|")
+	return strings.Join(sorted_values, "|")
 }
 
-func calculateHash(params string, salt string) string {	
+func calculateHash(params string, salt string) string {
 	finalString := params + "|" + salt
 	hash := sha256.New()
 	hash.Write([]byte(finalString))
 	hashString := hex.EncodeToString(hash.Sum(nil))
-	return hashString + salt	
+	return hashString + salt
 }
 
-func calculateChecksum(params string, key string, salt string) string {	
+func calculateChecksum(params string, key string, salt string) (string, error) {
 	hashString := calculateHash(params, salt)
 	checksum, err := Encrypt(hashString, key)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return checksum
+	return checksum, nil
 }
 
 func pkcs5Pad(text []byte, blocksize int, after int) []byte {
